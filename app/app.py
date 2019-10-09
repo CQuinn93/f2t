@@ -14,9 +14,8 @@ def home():
 @app.route('/users')
 def get_users():
     # Setup connection
-    # conn = psycopg2.connect("dbname=" + secrets.db + " user=" + secrets.user +
-    # " password=" + secrets.pw + " host=" + secrets.host)
-    conn = psycopg2.connect("dbname={} user={} password={} host={}".format(sec.db, sec.user, sec.pw, sec.host))
+    conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
+        sec.db, sec.user, sec.pw, sec.host))
 
     # Retrieve user data
     cur = conn.cursor()
@@ -25,10 +24,8 @@ def get_users():
 
     cur.close()
     conn.close()
-    var1 = 'A'
-    var2 = 'B'
 
-    return json.dumps("a{}_b{}".format(var1, var2), indent=4, sort_keys=True, default=str)
+    return json.dumps(results, indent=4, sort_keys=True, default=str)
 
 
 if __name__ == '__main__':
