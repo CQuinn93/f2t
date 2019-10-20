@@ -62,5 +62,34 @@ def get_users():
     )
 
 
+@app.route('/team/')
+def get_team():
+    # Get user id argument
+    user_id = request.args.get('user_id')
+
+    # Simple select to get team data
+    query = """
+    SELECT t.team_id, t.user_id, tm.team_member_id, p.player_id, p.name,
+           p.objective_met
+    FROM app.team t
+    INNER JOIN app.team_member tm
+      ON t.team_id = tm.team_id
+    INNER JOIN app.player p
+      ON p.player_id = tm.player_id
+    """
+
+    # Update query to return a user if specified
+    if user_id:
+        query = query + " WHERE user_id = " + user_id
+
+    results = simple_query(query)
+
+    return app.response_class(
+        response=json.dumps(results, indent=4, sort_keys=True, default=str),
+        status=200,
+        mimetype='application/json'
+    )
+
+
 if __name__ == '__main__':
     app.run()
