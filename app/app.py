@@ -7,6 +7,35 @@ import secrets as sec
 app = Flask(__name__)
 
 
+# Helper functions
+def simple_query(query):
+    """Runs an SQL query against the database and returns the result
+
+    Parameters
+    ----------
+    query : str
+        The SQL query to get results for
+
+    Returns
+    -------
+    list
+        a list of tuples where each tuple is a row returned by the query
+    """
+
+    # Setup connection
+    conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
+        sec.db, sec.user, sec.pw, sec.host))
+
+    # Retrieve data
+    cur = conn.cursor()
+    cur.execute(query)
+    result = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return result
+
+
 @app.route('/')
 def home():
     return "online"
@@ -14,28 +43,18 @@ def home():
 
 @app.route('/user/')
 def get_users():
-    # Get user id supplied
+    # Get user id argument
     user_id = request.args.get('user_id')
 
-    # Create query based on user id supplied in request, if any
+    # Simple select to get all users
     query = "SELECT * FROM app.user"
-    if user_id is not None:
-        # Update query to return only the user specified
+
+    # Update query to return a user if specified
+    if user_id:
         query = query + " WHERE user_id = " + user_id
 
-    # Setup connection
-    conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
-        sec.db, sec.user, sec.pw, sec.host))
+    results = simple_query(query)
 
-    # Retrieve user data
-    cur = conn.cursor()
-    cur.execute(query)
-    results = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    # return json.
     return app.response_class(
         response=json.dumps(results, indent=4, sort_keys=True, default=str),
         status=200,
