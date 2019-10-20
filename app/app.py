@@ -91,5 +91,26 @@ def get_team():
     )
 
 
+@app.route('/player/')
+def get_players():
+    # Get player id argument
+    player_id = request.args.get('player_id')
+
+    # Simple select to get all users
+    query = "SELECT * FROM app.player"
+
+    # Update query to return a user if specified
+    if player_id:
+        query = query + " WHERE player_id = " + player_id
+
+    results = simple_query(query)
+
+    return app.response_class(
+        response=json.dumps(results, indent=4, sort_keys=True, default=str),
+        status=200,
+        mimetype='application/json'
+    )
+
+
 if __name__ == '__main__':
     app.run()
