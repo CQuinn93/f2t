@@ -1,14 +1,16 @@
 from flask import Flask
 from flask import request
+from flask_bcrypt import Bcrypt
 import json
 import psycopg2
 import secrets as sec
 
 app = Flask(__name__)
+f_bcrypt = Bcrypt(app)
 
 
 # Helper functions
-def simple_query(query):
+def simple_query(query, commit=False, get_result=True):
     """Runs an SQL query against the database and returns the result
 
     Parameters
@@ -29,7 +31,15 @@ def simple_query(query):
     # Retrieve data
     cur = conn.cursor()
     cur.execute(query)
-    result = cur.fetchall()
+
+    if commit:
+        conn.commit()
+
+    if get_result:
+        result = cur.fetchall()
+    else:
+        result = None
+
     cur.close()
     conn.close()
 
@@ -39,6 +49,34 @@ def simple_query(query):
 @app.route('/')
 def home():
     return "online"
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.form.to_dict()
+    pw_hash = f_bcrypt.generate_password_hash(data['password']).decode('utf-8')
+
+    # Create new entry in user table first then account table
+    query = """
+    WITH row AS (
+    INSERT INTO app.user (username, email, created_on)
+    VALUES ('{}', '{}', NOW()) RETURNING username
+    )
+    INSERT INTO app.account (username, hashed_password, created_on)
+    SELECT username, '{}', NOW()
+    FROM row
+    ;
+    """.format(data['username'], data['email'], pw_hash)
+
+    simple_query(query, commit=True, get_result=False)
+
+    result = "{'registered': True}"
+
+    return app.response_class(
+        response=json.dumps(result, indent=4, sort_keys=True, default=str),
+        status=200,
+        mimetype='application/json'
+    )
 
 
 @app.route('/user/')
