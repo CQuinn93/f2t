@@ -108,3 +108,6 @@ secrets.py
 
 # Scripts for creating db tables and inserting mock data
 db_scripts/*
+
+# Data files
+data/*
