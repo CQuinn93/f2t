@@ -9,18 +9,18 @@ import requests
 
 
 # Pull data from Fantasy.PremierLeague.com
-url = 'https://fantasy.premierleague.com/api/bootstrap-static/'
-response = requests.get(url)
-elements = response.json()['elements']
+URL = 'https://fantasy.premierleague.com/api/bootstrap-static/'
+RESPONSE = requests.get(URL)
+ELEMENTS = RESPONSE.json()['elements']
 
 # Extract player id and first and last name to a DataFrame
-df = pd.DataFrame(np.empty((len(elements), 3)))
-df[:] = np.nan
-df.columns = ['id', 'first_name', 'last_name']
+DF = pd.DataFrame(np.empty((len(ELEMENTS), 3)))
+DF[:] = np.nan
+DF.columns = ['id', 'first_name', 'last_name']
 
-for i in range(len(elements)):
-    df.iloc[i, 0] = str(elements[i]['id'])
-    df.iloc[i, 1] = str(elements[i]['first_name'])
-    df.iloc[i, 2] = str(elements[i]['second_name'])
+for i, item in enumerate(ELEMENTS):
+    DF.iloc[i, 0] = str(item['id'])
+    DF.iloc[i, 1] = str(item['first_name'])
+    DF.iloc[i, 2] = str(item['second_name'])
 
-df.to_csv('data/player_data.csv', encoding='utf-8', index=False)
+DF.to_csv('data/player_data.csv', encoding='utf-8', index=False)
