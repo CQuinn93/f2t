@@ -8,19 +8,16 @@ timestamps by goal.
 from datetime import datetime
 import numpy as np
 import pandas as pd
+import os
 import psycopg2
 import requests
 import sys
 
-sys.path.insert(1, 'E:/Code/f2t/app')
-
-import secrets as sec
-
-
 # Section 1 - Pull player data from app database
 # Update tables in database
 conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
-  sec.db, sec.user, sec.pw, sec.host))
+    os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
+    os.environ['f2t_pg_pw'], os.environ['f2t_pg_host']))
 
 cur = conn.cursor()
 
@@ -84,7 +81,8 @@ gs_FILE = 'data/update_goal_scored/goal_scored_{}.csv'.format(gs_NOW)
 new_scorers.to_csv(gs_FILE, encoding='utf-8', index=False)
 
 conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
-  sec.db, sec.user, sec.pw, sec.host))
+    os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
+    os.environ['f2t_pg_pw'], os.environ['f2t_pg_host']))
 
 cur = conn.cursor()
 
