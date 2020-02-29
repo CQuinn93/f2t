@@ -2,8 +2,8 @@ from flask import Flask
 from flask import request
 from flask_bcrypt import Bcrypt
 import json
+import os
 import psycopg2
-import secrets as sec
 
 app = Flask(__name__)
 f_bcrypt = Bcrypt(app)
@@ -23,10 +23,10 @@ def simple_query(query, commit=False, get_result=True):
     list
         a list of tuples where each tuple is a row returned by the query
     """
-
     # Setup connection
     conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
-        sec.db, sec.user, sec.pw, sec.host))
+        os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
+        os.environ['f2t_pg_pw'], os.environ['f2t_pg_host']))
 
     # Retrieve data
     cur = conn.cursor()
