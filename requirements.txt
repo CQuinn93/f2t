@@ -3,3 +3,4 @@ flask_bcrypt==0.7.1
 numpy==1.18.1
 pandas==1.0.1
 psycopg2==2.8.4
+requests==2.23.0
