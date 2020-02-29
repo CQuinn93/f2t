@@ -54,12 +54,13 @@ for i, item in enumerate(ELEMENTS):
     new_players.iloc[i, 3] = int(item['goals_scored'])
 
 # Sort data by ID to make it comparable
-new_players.astype({'player_id': 'int64', 'goals_scored': 'int64'})
+new_players['player_id'] = new_players['player_id'].astype('int')
+new_players['goals_scored'] = new_players['goals_scored'].astype('int')
 new_players.sort_values(by=['player_id'])
 new_players.sort_index(inplace=True)
 
 # Write data to file as record
-NOW = datetime.now().strftime("%Y-%m-%S_%H-%M-%S")
+NOW = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 FILE = 'data/update_goals/goals_{}.csv'.format(NOW)
 new_players.to_csv(FILE, encoding='utf-8', index=False)
 
@@ -76,7 +77,7 @@ gs_table_cols = ('player_id', 'first_name', 'second_name')
 new_scorers = new_scorers[gs_col_names]
 
 # Write goal scored to file as record
-gs_NOW = datetime.now().strftime("%Y-%m-%S_%H-%M-%S")
+gs_NOW = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 gs_FILE = 'data/update_goal_scored/goal_scored_{}.csv'.format(gs_NOW)
 new_scorers.to_csv(gs_FILE, encoding='utf-8', index=False)
 
