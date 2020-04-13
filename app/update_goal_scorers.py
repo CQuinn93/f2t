@@ -6,6 +6,7 @@ timestamps by goal.
 """
 
 from datetime import datetime
+from psycopg2 import extras
 import numpy as np
 import pandas as pd
 import os
@@ -65,7 +66,7 @@ FILE = 'data/update_goals/goals_{}.csv'.format(NOW)
 new_players.to_csv(FILE, encoding='utf-8', index=False)
 
 
-# Section 3 - Compare existing goal scoreres data to updated data and store
+# Section 3 - Compare existing goal scorers data to updated data and store
 # new goal scorer timestamps in app database
 joint_scorers = pd.merge(players, new_players, on='player_id')
 goal_diff = joint_scorers['goals_scored_x'] != joint_scorers['goals_scored_y']
@@ -93,5 +94,39 @@ with open(gs_FILE, 'r', encoding='utf-8') as row:
 
 conn.commit()
 
+cur.close()
+conn.close()
+
+
+# Section 4 - Update total goals scored by players in app database
+# Get totals goals scored for players with an updated amount
+updated_goals = joint_scorers[goal_diff][['player_id', 'goals_scored_y']]
+updated_goals_l = []
+for row in updated_goals.itertuples(index=True):
+    updated_goals_l.append((getattr(row, 'player_id'),
+                            getattr(row, 'goals_scored_y')))
+# Data is in the format [(id_1, updated_goals_1), (id_2, updated_goals_2), ...]
+
+# Create connection to database
+conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
+    os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
+    os.environ['f2t_pg_pw'], os.environ['f2t_pg_host']))
+
+cur = conn.cursor()
+
+update_player_goals_sql = """
+    UPDATE app.player AS p
+       SET goals_scored = new.goals_scored_y
+       FROM (VALUES %s) AS new(player_id, goals_scored_y)
+       WHERE p.player_id = new.player_id
+"""
+# Update goals scored in player table in app database
+psycopg2.extras.execute_values(
+    cur, update_player_goals_sql,
+    updated_goals_l,
+    template=None, page_size=100
+)
+
+conn.commit()
 cur.close()
 conn.close()
