@@ -111,3 +111,6 @@ db_scripts/*
 
 # Data files
 data/*
+
+# PyCharm project
+.idea
