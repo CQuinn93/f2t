@@ -148,20 +148,37 @@ def get_users():
     )
 
 
-@app.route('/team/')
-def get_team():
+@app.route('/team/', methods=['GET', 'POST'])
+def team():
+    if request.method == 'GET':
+        return get_team(request)
+    elif request.method == 'POST':
+        return post_team(request)
+    else:
+        return app.response_class(
+            response=None,
+            status=405,
+            mimetype='application/json'
+        )
+
+
+def get_team(req):
     # Get user id argument
-    user_id = request.args.get('user_id')
+    user_id = req.args.get('user_id')
 
     # Simple select to get team data
     query = """
-    SELECT t.team_id, t.user_id, tm.team_member_id, p.player_id, p.name,
-           p.objective_met
-    FROM app.team t
-    INNER JOIN app.team_member tm
-      ON t.team_id = tm.team_id
-    INNER JOIN app.player p
-      ON p.player_id = tm.player_id
+    SELECT  t.team_id
+            ,t.user_id
+            ,tm.team_member_id
+            ,p.player_id
+            ,p.first_name
+            ,p.second_name
+      FROM  app.team t
+        INNER JOIN  app.team_member tm
+            ON      t.team_id = tm.team_id
+        INNER JOIN  app.player p
+            ON      p.player_id = tm.player_id
     """
 
     # Update query to return a team if specified
@@ -176,6 +193,40 @@ def get_team():
         mimetype='application/json'
     )
 
+
+def post_team(req):
+    # Get data from request
+    req.get_data()
+    user_id = req.json.get('user_id')
+    player_ids = tuple(req.json.get('player_ids'))
+
+    # Convert all player ids into strings for easier formatting
+    player_ids = tuple([[str(x)] for x in player_ids])
+
+    # Create query to insert team and team members in a single statement
+    pre_values_query = f"""
+        with new_team as (
+          insert into app.team (user_id)
+          values ({user_id})
+          returning team_id
+        )
+        insert into app.team_member (team_id, player_id)
+        values
+    """
+
+    # Send insert query to
+    resp = execute_query_with_values(pre_values_query, player_ids,
+                                     values_format="((select * from new_team), %s)")
+
+    if isinstance(resp, type(app.response_class())):
+        return resp
+    else:
+        result = '{"team_added": True}'
+        return app.response_class(
+            response=json.dumps(result, indent=4, sort_keys=True, default=str),
+            status=200,
+            mimetype='application/json'
+        )
 
 
 @app.route('/player/')
