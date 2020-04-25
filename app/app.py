@@ -23,7 +23,7 @@ def simple_query(query, commit=False, get_result=True):
     list
         a list of tuples where each tuple is a row returned by the query
     """
-    # Setup connection
+    # Setup connection - details stored in environment variables
     conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
         os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
         os.environ['f2t_pg_pw'], os.environ['f2t_pg_host']))
@@ -116,7 +116,7 @@ def get_team():
       ON p.player_id = tm.player_id
     """
 
-    # Update query to return a user if specified
+    # Update query to return a team if specified
     if user_id:
         query = query + " WHERE user_id = " + user_id
 
@@ -129,6 +129,7 @@ def get_team():
     )
 
 
+
 @app.route('/player/')
 def get_players():
     # Get player id argument
@@ -137,9 +138,30 @@ def get_players():
     # Simple select to get all users
     query = "SELECT * FROM app.player"
 
-    # Update query to return a user if specified
+    # Update query to return a player if specified
     if player_id:
         query = query + " WHERE player_id = " + player_id
+
+    results = simple_query(query)
+
+    return app.response_class(
+        response=json.dumps(results, indent=4, sort_keys=True, default=str),
+        status=200,
+        mimetype='application/json'
+    )
+
+
+@app.route('/league/')
+def get_leagues():
+    # Get league id argument
+    league_id = request.args.get('league_id')
+
+    # Simple select to get all users
+    query = "SELECT * FROM app.league"
+
+    # Update query to return a league if specified
+    if league_id:
+        query = query + " WHERE league_id = " + league_id
 
     results = simple_query(query)
 
