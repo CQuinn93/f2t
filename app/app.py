@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 from flask_bcrypt import Bcrypt
+from psycopg2 import errors
 import json
 import os
 import psycopg2
@@ -44,6 +45,53 @@ def simple_query(query, commit=False, get_result=True):
     conn.close()
 
     return result
+
+
+def execute_query_with_values(pre_values_query, values, post_values_query='',
+                              values_format='(%s,%s)'):
+    """
+    """
+    # Setup connection to database
+    conn, cur = con_to_app_db()
+
+    # Construct query
+    values_psql = values_to_psql(cur, values, values_format)
+    query = pre_values_query + ' ' + values_psql + '' + post_values_query
+
+    # Catch common database related errors and return message to caller
+    try:
+        cur.execute(query)
+    except errors.ForeignKeyViolation as e:
+        # Foreign Key violated when trying to insert team or team_member,
+        # return error message
+        print(e)
+        results = '{"psycopg2.errors.ForeignKeyViolation": "' + str(e) + '"}'
+        return app.response_class(
+            response=json.dumps(results, indent=4, sort_keys=True, default=str),
+            status=422,
+            mimetype='application/json'
+        )
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return query
+
+
+def con_to_app_db():
+    # Setup connection - details stored in environment variables
+    conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
+        os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
+        os.environ['f2t_pg_pw'], os.environ['f2t_pg_host']))
+
+    cur = conn.cursor()
+
+    return conn, cur
+
+
+def values_to_psql(cursor, values, f='(%s,%s)'):
+    return ','.join(cursor.mogrify(f, x).decode("utf-8") for x in values)
 
 
 @app.route('/')
