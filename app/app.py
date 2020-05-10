@@ -71,6 +71,16 @@ def execute_query_with_values(pre_values_query, values, post_values_query='',
             status=422,
             mimetype='application/json'
         )
+    except errors.NotNullViolation as e:
+        # A null value was supplied for a column that does not allow null
+        # values - most likely user did not supply league_id or user_id
+        print(e)
+        results = '{"psycopg2.errors.NotNullViolation": "' + str(e) + '"}'
+        return app.response_class(
+            response=json.dumps(results, indent=4, sort_keys=True, default=str),
+            status=422,
+            mimetype='application/json'
+        )
 
     conn.commit()
     cur.close()
@@ -197,6 +207,7 @@ def get_team(req):
 def post_team(req):
     # Get data from request
     req.get_data()
+    league_id = req.json.get('league_id')
     user_id = req.json.get('user_id')
     player_ids = tuple(req.json.get('player_ids'))
 
@@ -206,8 +217,8 @@ def post_team(req):
     # Create query to insert team and team members in a single statement
     pre_values_query = f"""
         with new_team as (
-          insert into app.team (user_id)
-          values ({user_id})
+          insert into app.team (user_id, league_id)
+          values ({user_id}, {league_id})
           returning team_id
         )
         insert into app.team_member (team_id, player_id)
