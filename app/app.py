@@ -12,7 +12,7 @@ f_bcrypt = Bcrypt(app)
 
 # Helper functions
 def simple_query(query, commit=False, get_result=True):
-    """Runs an SQL query against the database and returns the result
+    """Execute an SQL query on the database.
 
     Parameters
     ----------
@@ -47,16 +47,40 @@ def simple_query(query, commit=False, get_result=True):
     return result
 
 
-def execute_query_with_values(pre_values_query, values, post_values_query='',
+def execute_query_with_values(values_query, values, post_values_query='',
                               values_format='(%s,%s)'):
-    """
+    """Formats an SQL query containing the `VALUES` command and executes on the
+    database.
+
+    This function is intended to be used when multiple rows are to be inserted
+    into the database. The values supplied are added to the query in a format
+    that is understood by the database.
+
+    Parameters
+    ----------
+    values_query : str
+        The SQL query which contains the `VALUES` command
+    values : str
+        The raw values to be used by the `VALUES` command
+    post_values_query : str
+        Any SQL to be appended to `values_query` (the default is a blank string
+        which means no additional SQL is appended to the query)
+    values_format : str
+        The format the values should follow in the SQL query
+
+    Returns
+    -------
+    tuple of (str, `flask.wrappers.Response`)
+        str: The query sent to the database to execute
+        `flask.wrappers.Response`: A response containing the error while
+            executing the query on the database (None if no error occurred)
     """
     # Setup connection to database
     conn, cur = con_to_app_db()
 
     # Construct query
     values_psql = values_to_psql(cur, values, values_format)
-    query = pre_values_query + ' ' + values_psql + '' + post_values_query
+    query = values_query + ' ' + values_psql + '' + post_values_query
 
     # Catch common database related errors and return message to caller
     try:
@@ -66,27 +90,29 @@ def execute_query_with_values(pre_values_query, values, post_values_query='',
         # return error message
         print(e)
         results = '{"psycopg2.errors.ForeignKeyViolation": "' + str(e) + '"}'
-        return app.response_class(
+        response = app.response_class(
             response=json.dumps(results, indent=4, sort_keys=True, default=str),
             status=422,
             mimetype='application/json'
         )
+        return query, response
     except errors.NotNullViolation as e:
         # A null value was supplied for a column that does not allow null
         # values - most likely user did not supply league_id or user_id
         print(e)
         results = '{"psycopg2.errors.NotNullViolation": "' + str(e) + '"}'
-        return app.response_class(
+        response = app.response_class(
             response=json.dumps(results, indent=4, sort_keys=True, default=str),
             status=422,
             mimetype='application/json'
         )
+        return query, response
 
     conn.commit()
     cur.close()
     conn.close()
 
-    return query
+    return query, None
 
 
 def con_to_app_db():
@@ -215,7 +241,7 @@ def post_team(req):
     player_ids = tuple([[str(x)] for x in player_ids])
 
     # Create query to insert team and team members in a single statement
-    pre_values_query = f"""
+    values_query = f"""
         with new_team as (
           insert into app.team (user_id, league_id)
           values ({user_id}, {league_id})
@@ -226,11 +252,12 @@ def post_team(req):
     """
 
     # Send insert query to
-    resp = execute_query_with_values(pre_values_query, player_ids,
-                                     values_format="((select * from new_team), %s)")
+    format_values = "((select * from new_team), %s)"
+    results = execute_query_with_values(values_query, player_ids,
+                                        values_format=format_values)
 
-    if isinstance(resp, type(app.response_class())):
-        return resp
+    if isinstance(results[1], type(app.response_class())):
+        return results[1]
     else:
         result = '{"team_added": True}'
         return app.response_class(
