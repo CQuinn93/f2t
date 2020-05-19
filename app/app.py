@@ -18,11 +18,17 @@ def simple_query(query, commit=False, get_result=True):
     ----------
     query : str
         The SQL query to get results for
+    commit : bool
+        Whether the query should be committed on the database after execution
+    get_result : bool
+        Whether the result of the query should be requested
 
     Returns
     -------
-    list
-        a list of tuples where each tuple is a row returned by the query
+    list of tuples
+        Each row returned from executing the query is represented by a tuple in
+        the list. Each column value is a separate element in the tuple. None is
+        returned if `get_result` is set to False.
     """
     # Setup connection - details stored in environment variables
     conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
@@ -60,7 +66,7 @@ def execute_query_with_values(values_query, values, post_values_query='',
     ----------
     values_query : str
         The SQL query which contains the `VALUES` command
-    values : str
+    values : tuple of (str,)
         The raw values to be used by the `VALUES` command
     post_values_query : str
         Any SQL to be appended to `values_query` (the default is a blank string
@@ -71,9 +77,9 @@ def execute_query_with_values(values_query, values, post_values_query='',
     Returns
     -------
     tuple of (str, `flask.wrappers.Response`)
-        str: The query sent to the database to execute
+        str: The query sent to the database to execute.
         `flask.wrappers.Response`: A response containing the error while
-            executing the query on the database (None if no error occurred)
+            executing the query on the database (None if no error occurred).
     """
     # Setup connection to database
     conn, cur = con_to_app_db()
@@ -116,6 +122,16 @@ def execute_query_with_values(values_query, values, post_values_query='',
 
 
 def con_to_app_db():
+    """Create a connection to the database and opens a cursor that uses this
+    connection.
+
+    Returns
+    -------
+    tuple of (`psycopg2.extensions.connection`, `psycopg2.extensions.cursor`,)
+        `psycopg2.extensions.connection`: The connection object to the database.
+        `psycopg2.extensions.cursor`: A cursor opened using the connection in
+            the first element of this tuple.
+    """
     # Setup connection - details stored in environment variables
     conn = psycopg2.connect("dbname={} user={} password={} host={}".format(
         os.environ['f2t_pg_db'], os.environ['f2t_pg_user'],
@@ -126,8 +142,26 @@ def con_to_app_db():
     return conn, cur
 
 
-def values_to_psql(cursor, values, f='(%s,%s)'):
-    return ','.join(cursor.mogrify(f, x).decode("utf-8") for x in values)
+def values_to_psql(cursor, values, format_='(%s,%s)'):
+    """Returns a query string for the `VALUE` containing the `values` supplied
+     in the `f`ormat supplied.
+
+    Parameters
+    ----------
+    cursor : `psycopg2.extensions.connection`
+        A cursor opened on a connection to a database
+    values : tuple of (str,)
+        The raw values to be used by the `VALUES` command
+    format_ : str
+        The format of the values for the SQL query
+
+    Returns
+    -------
+    str
+        The values supplied formatted to fit into a `VALUE` command in an SQL
+        query.
+    """
+    return ','.join(cursor.mogrify(format_, x).decode("utf-8") for x in values)
 
 
 @app.route('/')
