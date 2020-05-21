@@ -92,8 +92,8 @@ def execute_query_with_values(values_query, values, post_values_query='',
     try:
         cur.execute(query)
     except errors.ForeignKeyViolation as e:
-        # Foreign Key violated when trying to insert team or team_member,
-        # return error message
+        # Foreign Key violated, most likely trying to insert team or
+        # team_member, return error message
         print(e)
         results = '{"psycopg2.errors.ForeignKeyViolation": "' + str(e) + '"}'
         response = app.response_class(
@@ -166,6 +166,15 @@ def values_to_psql(cursor, values, format_='(%s,%s)'):
 
 @app.route('/')
 def home():
+    """ Root route to test if API is online.
+    ---
+    get:
+        summary: Root endpoint.
+        description: Returns a simple string - used to test if API is online.
+        responses:
+            200:
+                description: Returns string "online".
+    """
     return "online"
 
 
@@ -199,6 +208,21 @@ def register():
 
 @app.route('/user/')
 def get_users():
+    """ User route.
+    ---
+    get:
+        summary: Get users or users specified.
+        description: Get a user by ID or all users if no ID is supplied.
+        parameters:
+            - name: user_id
+              in: query
+              description: Numeric ID of the user to get
+              type: integer
+              required: false
+        responses:
+            200:
+                description: User object(s) to be returned.
+    """
     # Get user id argument
     user_id = request.args.get('user_id')
 
@@ -220,6 +244,52 @@ def get_users():
 
 @app.route('/team/', methods=['GET', 'POST'])
 def team():
+    """ Team route.
+    ---
+    get:
+        summary: Get all teams or a specific team.
+        description: Get a user by ID or all users if no ID is supplied. A team
+            consists of all team members and player data for each team member.
+        parameters:
+            - name: team_id
+              in: query
+              description: User ID
+              type: integer
+              required: false
+        responses:
+            200:
+                description: Team object(s) to be returned.
+    post:
+        summary: Get all users or a specific user.
+        description: Get a single foo with the bar ID.
+        requestBody:
+            description: Contains the data associated to this team. This
+                includes the league, user (owner), and player id(s).
+            required: true
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Team'
+                        ## TODO: Create Team schema, should include the
+                        ## TODO: following:
+                        ## TODO:    - league_id: ID of League this team
+                        ## TODO:                 belongs to.
+                        ## TODO:    - user_id: ID of owner (user) of this team.
+                        ## TODO:    - player_ids: List of IDs of players that
+                        ## TODO:                  are part of this team.
+        responses:
+            200:
+                description: JSON string indicating team as added successfully.
+            422:
+                description: If the team data was formatted correctly but the
+                    data failed a database rule this code will be returned with
+                    the error message from the database. The most common
+                    reasons for failure are (1) when one of the requestBody
+                    values (league, user, and/or player id) supplied does not
+                    exists in the database (ForeignKeyViolation error) or (2)
+                    when a null/missing value is supplied for one of the
+                    requestBody values (NotNullViolation error).
+    """
     if request.method == 'GET':
         return get_team(request)
     elif request.method == 'POST':
