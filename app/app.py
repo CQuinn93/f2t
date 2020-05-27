@@ -180,6 +180,27 @@ def home():
 
 @app.route('/register', methods=['POST'])
 def register():
+    """ Register route.
+    ---
+    post:
+        summary: Adds a new user to the database.
+        description: Adds a new user entry and a new account entry to the
+            database. Accounts are used for authenticating requests and users
+            are used for getting information about a user.
+        requestBody:
+            description: Contains the data associated to this user. This
+                includes an email, a username, and a password.
+            required: true
+            content:
+                multipart/form-data:
+                    schema:
+                        $ref: '#/components/schemas/User'
+                        ## TODO: Create User schema.
+                        ## TODO: This will be added in a future story.
+        responses:
+            200:
+                description: JSON string indicating successful registration.
+    """
     data = request.form.to_dict()
     pw_hash = f_bcrypt.generate_password_hash(data['password']).decode('utf-8')
 
@@ -211,7 +232,7 @@ def get_users():
     """ User route.
     ---
     get:
-        summary: Get users or users specified.
+        summary: Get users or user specified.
         description: Get a user by ID or all users if no ID is supplied.
         parameters:
             - name: user_id
@@ -260,8 +281,9 @@ def team():
             200:
                 description: Team object(s) to be returned.
     post:
-        summary: Get all users or a specific user.
-        description: Get a single foo with the bar ID.
+        summary: Add a new team to the database.
+        description: Adds a new team entry and many new team_member entries to
+            the database.
         requestBody:
             description: Contains the data associated to this team. This
                 includes the league, user (owner), and player id(s).
@@ -277,6 +299,7 @@ def team():
                         ## TODO:    - user_id: ID of owner (user) of this team.
                         ## TODO:    - player_ids: List of IDs of players that
                         ## TODO:                  are part of this team.
+                        ## TODO: This will be added in a future story.
         responses:
             200:
                 description: JSON string indicating team as added successfully.
@@ -373,6 +396,21 @@ def post_team(req):
 
 @app.route('/player/')
 def get_players():
+    """ Player route.
+    ---
+    get:
+        summary: Get players or player specified.
+        description: Get a user by ID or all players if no ID is supplied.
+        parameters:
+            - name: player_id
+              in: query
+              description: Numeric ID of the player to get
+              type: integer
+              required: false
+        responses:
+            200:
+                description: Player object(s) to be returned.
+    """
     # Get player id argument
     player_id = request.args.get('player_id')
 
@@ -394,6 +432,21 @@ def get_players():
 
 @app.route('/league/')
 def get_leagues():
+    """ League route.
+    ---
+    get:
+        summary: Get leagues or league specified.
+        description: Get a league by ID or all leagues if no ID is supplied.
+        parameters:
+            - name: league_id
+              in: query
+              description: Numeric ID of the league to get
+              type: integer
+              required: false
+        responses:
+            200:
+                description: League object(s) to be returned.
+    """
     # Get league id argument
     league_id = request.args.get('league_id')
 
