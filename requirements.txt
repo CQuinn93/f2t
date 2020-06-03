@@ -2,6 +2,7 @@ apispec==3.3.0
 apispec_webframeworks==0.5.2
 flask==1.1.1
 flask_bcrypt==0.7.1
+flask_sqlalchemy==2.4.3
 marshmallow ==3.6.0
 numpy==1.18.1
 pandas==1.0.1

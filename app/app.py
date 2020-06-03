@@ -1,13 +1,47 @@
 from flask import Flask
 from flask import request
 from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
 from psycopg2 import errors
 import json
 import os
 import psycopg2
 
 app = Flask(__name__)
+DB_URI = f"postgresql://{os.environ['f2t_pg_user']}:{os.environ['f2t_pg_pw']}@{os.environ['f2t_pg_host']}/{os.environ['f2t_pg_db']}"
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+db = SQLAlchemy(app)
 f_bcrypt = Bcrypt(app)
+
+
+class GoalScored(db.Model):
+    __table_args__ = {"schema": "app"}
+
+    goal_scored_id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer)
+    first_name = db.Column(db.String(100))
+    second_name = db.Column(db.String(100))
+    created_on = db.Column(db.DateTime, server_default='NOW()')
+
+    def __repr__(self):
+        return f"<GoalScored {self.goal_scored_id}, {self.first_name}, {self.created_on}>"
+
+
+@app.route('/test_model')
+def add_goal_scored():
+    """
+    """
+    gs = GoalScored(player_id=103, first_name="Marcos", second_name="Alonso")
+    db.session.add(gs)
+    db.session.commit()
+
+    gs_result = GoalScored.query.filter_by(player_id=103).all()
+
+    return app.response_class(
+        response=json.dumps(gs_result, indent=4, sort_keys=True, default=str),
+        status=200,
+        mimetype='application/json'
+    )
 
 
 # Helper functions
