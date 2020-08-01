@@ -1,12 +1,13 @@
+import json
+import os
+
 from flask import Flask
 from flask import request
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from psycopg2 import errors
-from collections import OrderedDict
-import json
-import os
 import psycopg2
+
 
 app = Flask(__name__)
 DB_URI = (f"postgresql://{os.environ['f2t_pg_user']}:{os.environ['f2t_pg_pw']}"
@@ -14,83 +15,6 @@ DB_URI = (f"postgresql://{os.environ['f2t_pg_user']}:{os.environ['f2t_pg_pw']}"
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 db = SQLAlchemy(app)
 f_bcrypt = Bcrypt(app)
-
-
-class GoalScored(db.Model):
-    __table_args__ = {"schema": "app"}
-
-    goal_scored_id = db.Column(db.Integer, primary_key=True)
-    player_id = db.Column(db.Integer)
-    first_name = db.Column(db.String(100))
-    second_name = db.Column(db.String(100))
-    created_on = db.Column(db.DateTime, server_default='NOW()')
-
-    def __repr__(self):
-        return f"<GoalScored {self.goal_scored_id}, {self.first_name}, {self.created_on}>"
-
-    def to_dict(self):
-        return {'goal_scored_id': self.goal_scored_id, 'player_id': self.player_id, 'first_name': self.first_name,
-                'second_name': self.second_name, 'created_on': self.created_on}
-
-
-@app.route('/test_model', methods=['GET', 'POST'])
-def goal_scored():
-    """
-    """
-    if request.method == 'GET':
-        return get_goal_scored(request)
-    elif request.method == 'POST':
-        return post_goal_scored(request)
-    else:
-        return app.response_class(
-            response=None,
-            status=405,
-            mimetype='application/json'
-        )
-
-
-def get_goal_scored(req):
-    """
-    """
-    player_id = req.args.get('player_id')
-
-    # Return all rows with this player_id
-    gs_result = GoalScored.query.filter_by(player_id=player_id).all()
-
-    # Return success message
-    all_gs = []
-    for gs in gs_result:
-        all_gs.append(gs.to_dict())
-
-    msg = {'status': "success", 'data': {'GoalScored': all_gs}}
-    return app.response_class(
-        response=json.dumps(msg, indent=4, default=str),
-        status=200,
-        mimetype='application/json'
-    )
-
-
-def post_goal_scored(req):
-    """
-    """
-    # Get data from request
-    req.get_data()
-    player_id = req.json.get('player_id')
-    first_name = req.json.get('first_name')
-    second_name = req.json.get('second_name')
-
-    # Create instance of GoalScored and add to database
-    gs = GoalScored(player_id=player_id, first_name=first_name, second_name=second_name)
-    db.session.add(gs)
-    db.session.commit()
-
-    # Return success message
-    msg = {'status': "success", 'data': {'GoalScored': gs.to_dict()}}
-    return app.response_class(
-        response=json.dumps(msg, indent=4, default=str),
-        status=200,
-        mimetype='application/json'
-    )
 
 
 # Helper functions
