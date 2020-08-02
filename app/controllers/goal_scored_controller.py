@@ -6,7 +6,7 @@ from app.models.goal_scored import GoalScored
 goal_scored_main = Blueprint('main', __name__)
 
 
-@goal_scored_main.route('/test_model', methods=['GET', 'POST', 'PUT'])
+@goal_scored_main.route('/test_model', methods=['GET', 'POST'])
 def goal_scored():
     """
     """
