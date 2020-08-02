@@ -8,7 +8,24 @@ goal_scored_main = Blueprint('goal_scored_main', __name__)
 
 @goal_scored_main.route('', methods=['GET', 'POST'])
 def goal_scored():
-    """
+    """ GoalScored route.
+    ---
+    get:
+        summary: Get goal scored events or the specified goal scored event.
+        description: Get a goal scored event(s) by player ID or all goal scored events if no player ID is supplied.
+        parameters:
+            - name: player_id
+              in: query
+              description: Numeric ID of the player who caused the goal scored events
+              type: integer
+              required: false
+        responses:
+            200:
+                description: GoalScored object(s) to be returned.
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/GoalScored'
     """
     if request.method == 'GET':
         return get_goal_scored(request)
