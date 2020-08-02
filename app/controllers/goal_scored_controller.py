@@ -3,10 +3,10 @@ from flask import Blueprint, jsonify, make_response, request
 from app import db
 from app.models.goal_scored import GoalScored
 
-goal_scored_main = Blueprint('main', __name__)
+goal_scored_main = Blueprint('goal_scored_main', __name__)
 
 
-@goal_scored_main.route('/test_model', methods=['GET', 'POST'])
+@goal_scored_main.route('', methods=['GET', 'POST'])
 def goal_scored():
     """
     """
