@@ -6,7 +6,7 @@ player_main = Blueprint('player_main', __name__)
 
 
 @player_main.route('', methods=['GET', 'POST'])
-def get_players():
+def get_player():
     """ Player route.
     ---
     get:
