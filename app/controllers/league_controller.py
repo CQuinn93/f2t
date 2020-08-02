@@ -27,6 +27,10 @@ def league():
         responses:
             200:
                 description: League object(s) to be returned.
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/League'
     """
     if request.method == 'GET':
         return get_league(request)

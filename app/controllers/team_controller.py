@@ -45,6 +45,10 @@ def team():
         responses:
             200:
                 description: JSON string indicating team was added successfully.
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Team'
     """
     if request.method == 'GET':
         return get_team(request)
