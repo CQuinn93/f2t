@@ -1,6 +1,4 @@
-import json
-
-from flask import Blueprint, make_response, request
+from flask import Blueprint, jsonify, make_response, request
 
 from app import db
 from app.models.goal_scored import GoalScored
@@ -8,7 +6,7 @@ from app.models.goal_scored import GoalScored
 goal_scored_main = Blueprint('main', __name__)
 
 
-@goal_scored_main.route('/test_model', methods=['GET', 'POST'])
+@goal_scored_main.route('/test_model', methods=['GET', 'POST', 'PUT'])
 def goal_scored():
     """
     """
@@ -17,10 +15,10 @@ def goal_scored():
     elif request.method == 'POST':
         return post_goal_scored(request)
     else:
-        response_object = {
-            'message': 'Must use GET or POST for HTTP methods'
-        }
-        return json.dumps(response_object, 405)
+        # Requests that are not GET or POST can't make it this far but handle this scenario anyway
+        response = make_response({'message': 'Must use GET or POST for HTTP methods'}, 405)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 
 def get_goal_scored(req):
@@ -35,10 +33,7 @@ def get_goal_scored(req):
         goal_scored_records = GoalScored.query.all()
 
     # Return records found as json - empty array if no records found
-    response_json = json.dumps([ob.to_dict() for ob in goal_scored_records], default=str)
-    response = make_response(response_json)
-    response.headers['Content-Type'] = 'application/json'
-    return response
+    return jsonify([ob.to_dict() for ob in goal_scored_records])
 
 
 def post_goal_scored(req):
@@ -56,8 +51,5 @@ def post_goal_scored(req):
     db.session.commit()
 
     # Return success message
-    response_object = {
-        'status': 'success - USERS NOT ADDED TO DB YET, TESTING APP',
-          'data': {'GoalScored': gs.to_dict()}
-    }
-    return response_object, 200
+    return jsonify(status='success',
+                   data={'GoalScored': gs.to_dict()})
