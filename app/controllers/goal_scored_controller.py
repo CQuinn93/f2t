@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, make_response, request
+from flask import Blueprint, jsonify, request
 
 from app import db
 from app.models.goal_scored import GoalScored
@@ -16,9 +16,7 @@ def goal_scored():
         return post_goal_scored(request)
     else:
         # Requests that are not GET or POST can't make it this far but handle this scenario anyway
-        response = make_response({'message': 'Must use GET or POST for HTTP methods'}, 405)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        return jsonify(status='failed', message='Must use GET or POST for HTTP methods.'), 450
 
 
 def get_goal_scored(req):
