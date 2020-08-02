@@ -21,7 +21,7 @@ def league():
               required: false
             - name: user_id
               in: query
-              description: Numeric ID of the user who owns leagues to get
+              description: Numeric ID of the user who owns the league(s) to get
               type: integer
               required: false
         responses:
@@ -64,10 +64,9 @@ def post_league(req):
     name = req.json.get('name')
 
     # Create instance of GoalScored and add to database
-    league = League(user_id=user_id, name=name)
-    db.session.add(league)
+    new_league = League(user_id=user_id, name=name)
+    db.session.add(new_league)
     db.session.commit()
 
     # Return success message
-    return jsonify(status='success',
-                   data={'GoalScored': league.to_dict()})
+    return jsonify(status='success', data={'GoalScored': new_league.to_dict()})

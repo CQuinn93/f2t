@@ -44,10 +44,9 @@ def post_goal_scored(req):
     second_name = req.json.get('second_name')
 
     # Create instance of GoalScored and add to database
-    gs = GoalScored(player_id=player_id, first_name=first_name, second_name=second_name)
-    db.session.add(gs)
+    new_goal_scored = GoalScored(player_id=player_id, first_name=first_name, second_name=second_name)
+    db.session.add(new_goal_scored)
     db.session.commit()
 
     # Return success message
-    return jsonify(status='success',
-                   data={'GoalScored': gs.to_dict()})
+    return jsonify(status='success', data={'GoalScored': new_goal_scored.to_dict()})
