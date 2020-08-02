@@ -399,41 +399,5 @@ def post_team(req):
         )
 
 
-@app.route('/league/')
-def get_leagues():
-    """ League route.
-    ---
-    get:
-        summary: Get leagues or league specified.
-        description: Get a league by ID or all leagues if no ID is supplied.
-        parameters:
-            - name: league_id
-              in: query
-              description: Numeric ID of the league to get
-              type: integer
-              required: false
-        responses:
-            200:
-                description: League object(s) to be returned.
-    """
-    # Get league id argument
-    league_id = request.args.get('league_id')
-
-    # Simple select to get all users
-    query = "SELECT * FROM app.league"
-
-    # Update query to return a league if specified
-    if league_id:
-        query = query + " WHERE league_id = " + league_id
-
-    results = simple_query(query)
-
-    return app.response_class(
-        response=json.dumps(results, indent=4, sort_keys=True, default=str),
-        status=200,
-        mimetype='application/json'
-    )
-
-
 if __name__ == '__main__':
     app.run()
