@@ -7,8 +7,26 @@ league_main = Blueprint('league_main', __name__)
 
 
 @league_main.route('', methods=['GET', 'POST'])
-def goal_scored():
-    """
+def league():
+    """ League route.
+    ---
+    get:
+        summary: Get leagues or league specified.
+        description: Get a league(s) by league or user ID or all leagues if no league or user ID is supplied.
+        parameters:
+            - name: league_id
+              in: query
+              description: Numeric ID of the league to get
+              type: integer
+              required: false
+            - name: user_id
+              in: query
+              description: Numeric ID of the user who owns leagues to get
+              type: integer
+              required: false
+        responses:
+            200:
+                description: League object(s) to be returned.
     """
     if request.method == 'GET':
         return get_league(request)
