@@ -1,12 +1,14 @@
 from flask_script import Manager, Server
 from flask_script.commands import ShowUrls, Clean
 
-from app import db, create_app
+from app import create_app
 from app.controllers.goal_scored_controller import goal_scored_main
+from app.controllers.player_controller import player_main
 from app.models.goal_scored import GoalScored
 
 app = create_app()
-app.register_blueprint(goal_scored_main)
+app.register_blueprint(goal_scored_main, url_prefix='/goal_scored')
+app.register_blueprint(player_main, url_prefix='/player')
 
 manager = Manager(app)
 manager.add_command("server", Server())
