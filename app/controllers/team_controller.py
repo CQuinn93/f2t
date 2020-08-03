@@ -88,9 +88,10 @@ def post_team(req):
     req.get_data()
     league_id = req.json.get('league_id')
     user_id = req.json.get('user_id')
+    name = req.json.get('name')
 
     # Create instance of GoalScored and add to database
-    new_team = Team(user_id=user_id, league_id=league_id)
+    new_team = Team(user_id=user_id, league_id=league_id, name=name)
     db.session.add(new_team)
 
     # Commit data to database - if exception is caught, return the error message
