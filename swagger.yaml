@@ -1,0 +1,209 @@
+info:
+  description: API for First2Twenty App
+  title: F2T
+  version: 0.1.0
+openapi: 3.0.0
+paths:
+  /user:
+    get:
+      description: Get a user by ID or all users if no ID is supplied.
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+          required: false
+          description: Numeric ID of the user to return.
+        - in: query
+          name: email
+          schema:
+            type: string
+          required: false
+          description: Email of the user to return.
+      responses: 
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User_get'
+      summary: Returns all users or user specified by ID.
+    post:
+      description: Adds a new user entry and a new account entry to the database.
+        Accounts are used for authenticating requests and users are used for getting
+        information about a user.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User_post'
+        description: The values required to create a user are listed below.
+        required: true
+      responses:
+        '200':
+          description: JSON string indicating successful registration.
+      summary: Adds a new user to the database.
+  /player:
+    get:
+      description: Get a player by ID or all players if no ID is supplied.
+      parameters:
+      - in: query
+        name: player_id
+        schema:
+          type: integer
+        required: false
+        description: Numeric ID of the player to get
+      responses:
+        '200':
+          description: Player object(s) to be returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Player'
+      summary: Returns all players or player specified by ID.
+  /team:
+    get:
+      description: Get a user by ID or all users if no ID is supplied. A team consists
+        of all team members and player data for each team member.
+      parameters:
+      - in: query
+        name: team_id
+        schema:
+          type: integer
+        required: false
+        description: Numeric ID of the team to return.
+      - in: query
+        name: user_id
+        schema:
+          type: integer
+        required: false
+        description: Return all teams associated with this user_id.
+      responses:
+        '200':
+          description: Team object(s) to be returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+      summary: Returns all teams or team specified by ID.
+    post:
+      description: Adds a new team entry and many new team_member entries to the database.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Team'
+        description: Contains the data associated to this team. This includes the
+          league, user (owner), and player id(s).
+        required: true
+      responses:
+        '200':
+          description: JSON string indicating team as added successfully.
+        '422':
+          description: If the team data was formatted correctly but the data failed
+            a database rule this code will be returned with the error message from
+            the database. The most common reasons for failure are (1) when one of
+            the requestBody values (league, user, and/or player id) supplied does
+            not exists in the database (ForeignKeyViolation error) or (2) when a null/missing
+            value is supplied for one of the requestBody values (NotNullViolation
+            error).
+      summary: Add a new team to the database.
+  /league:
+    get:
+      description: Get a league by ID or all leagues if no ID is supplied.
+      parameters:
+      - in: query
+        name: league_id
+        schema:
+          type: integer
+        required: false
+        description: Numeric ID of the league to return.
+      - in: query
+        name: user_id
+        schema:
+          type: integer
+        required: false
+        description: Return all leagues associated with this user_id.
+      responses:
+        '200':
+          description: League object(s) to be returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/League'
+      summary: Get leagues or league specified.
+components:
+  schemas:
+    User_get:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        email:
+          type: string
+        created:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+    User_post:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          format: password
+    Player:
+      type: object
+      properties:
+        player_id:
+          type: integer
+        first_name:
+          type: string
+        second_name:
+          type: string
+        goals_scored:
+          type: integer
+        created_on:
+          type: string
+          format: date-time
+    Team:
+      type: object
+      properties:
+        league_id:
+          type: integer
+        user_id:
+          type: integer
+        player_ids:
+          type: string
+          description: This parameter should be included multiple times. Each occurence should represent a unique player_id.
+    League:
+      type: object
+      properties:
+        league_id:
+          type: integer
+        owner:
+          type: integer
+        name:
+          type: string
+        teams:
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            goal_count:
+              type: integer
+            created_on:
+              type: string
+              format: date-time
