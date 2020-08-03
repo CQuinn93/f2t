@@ -4,6 +4,6 @@ First2Twenty is a fantasy Football application where the user selects 20 footbal
 
 ### Repo Structure
 In general, the below shows the structure of branches in this project with a brief description of their purpose. Some exceptions exists.
- * `master` represents code in production.
+ * `master` represents code ready for production.
    * `uat` represents completed tasks/issues/feature ready for UAT.
      * All other branches represent tasks, issues, or features.
