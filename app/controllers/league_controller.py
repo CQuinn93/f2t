@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, make_response, request
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.models.league import League
@@ -70,7 +71,13 @@ def post_league(req):
     # Create instance of GoalScored and add to database
     new_league = League(user_id=user_id, name=name)
     db.session.add(new_league)
-    db.session.commit()
+
+    # Commit data to database - if exception is caught, return the error message
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        return jsonify(status='fail', error=str(e.orig))
 
     # Return success message
     return jsonify(status='success', data={'GoalScored': new_league.to_dict()})

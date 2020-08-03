@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.models.goal_scored import GoalScored
@@ -63,7 +64,13 @@ def post_goal_scored(req):
     # Create instance of GoalScored and add to database
     new_goal_scored = GoalScored(player_id=player_id, first_name=first_name, second_name=second_name)
     db.session.add(new_goal_scored)
-    db.session.commit()
+
+    # Commit data to database - if exception is caught, return the error message
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        return jsonify(status='fail', error=str(e.orig))
 
     # Return success message
     return jsonify(status='success', data={'GoalScored': new_goal_scored.to_dict()})
